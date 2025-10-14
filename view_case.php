@@ -313,10 +313,10 @@ $username = $user['username'];
                                 <div class="info-value"><?php echo JalaliDate::formatJalaliDate($case['created_at']); ?></div>
                             </div>
                             
-                            <?php if (!empty($case['deadline_date'])): ?>
-                                <div class="info-item">
-                                    <div class="info-label">مهلت پاسخ:</div>
-                                    <div class="info-value">
+                            <div class="info-item">
+                                <div class="info-label">مهلت پاسخ:</div>
+                                <div class="info-value">
+                                    <?php if (!empty($case['deadline_date'])): ?>
                                         <?php 
                                         $remaining_days = DeadlineHelper::getRemainingDays($case['deadline_date']);
                                         $status_class = DeadlineHelper::getDeadlineStatusClass($case['deadline_date'], $case['status']);
@@ -331,6 +331,38 @@ $username = $user['username'];
                                                 (<?php echo $remaining_days . ' روز باقی‌مانده'; ?>)
                                             <?php endif; ?>
                                         </small>
+                                    <?php else: ?>
+                                        <span class="text-muted">بدون مهلت</span>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+
+                            <?php if ($auth->canEditCases()): ?>
+                                <div class="info-item">
+                                    <div class="info-label">تنظیم/تغییر مهلت:</div>
+                                    <div class="info-value">
+                                        <form method="POST" action="update_case_deadline.php" class="mt-2">
+                                            <input type="hidden" name="case_id" value="<?php echo $case['id']; ?>">
+                                            <div class="row g-2 align-items-end">
+                                                <div class="col-auto">
+                                                    <label class="form-label mb-1">تاریخ جلالی (YYYY/MM/DD)</label>
+                                                    <input type="text" class="form-control" name="deadline_jalali" placeholder="مثال: 1404/07/01" value="<?php echo !empty($case['deadline_date']) ? JalaliDate::formatJalaliDate($case['deadline_date']) : ''; ?>">
+                                                    <div class="form-text">برای حذف مهلت، این فیلد را خالی بگذارید</div>
+                                                </div>
+                                                <div class="col-auto">
+                                                    <button type="submit" class="btn btn-primary btn-sm">
+                                                        <i class="fas fa-save me-1"></i>ثبت مهلت
+                                                    </button>
+                                                </div>
+                                                <?php if (!empty($case['deadline_date'])): ?>
+                                                <div class="col-auto">
+                                                    <button type="button" class="btn btn-outline-danger btn-sm" onclick="this.closest('form').querySelector('[name=deadline_jalali]').value=''; this.closest('form').submit();">
+                                                        <i class="fas fa-times me-1"></i>حذف مهلت
+                                                    </button>
+                                                </div>
+                                                <?php endif; ?>
+                                            </div>
+                                        </form>
                                     </div>
                                 </div>
                             <?php endif; ?>
@@ -452,6 +484,7 @@ $username = $user['username'];
                                                         <i class="fas fa-edit me-1"></i>
                                                         ویرایش ورودی
                                                     </a>
+                                                    <?php if ($auth->isAdmin()): ?>
                                                     <a href="delete_case_entry.php?id=<?php echo $entry['id']; ?>&return_url=<?php echo urlencode('view_case.php?case_id=' . $case['id']); ?>" 
                                                        class="btn btn-danger btn-sm"
                                                        onclick="return confirm('آیا مطمئن هستید که می‌خواهید این ورودی را به طور کامل حذف کنید؟ این عمل غیرقابل بازگشت است و تمام پیوست‌های مربوطه نیز حذف خواهند شد.')"
@@ -459,6 +492,7 @@ $username = $user['username'];
                                                         <i class="fas fa-trash me-1"></i>
                                                         حذف ورودی
                                                     </a>
+                                                    <?php endif; ?>
                                                 </div>
                                             <?php endif; ?>
                                         </div>

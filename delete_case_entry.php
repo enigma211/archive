@@ -6,10 +6,11 @@
 
 require_once 'includes/Auth.php';
 require_once 'config.php';
+require_once 'includes/AuditLogger.php';
 
-// Initialize Auth and check permissions
+// Initialize Auth and check permissions (Admin only)
 $auth = new Auth();
-$auth->requireEditCaseEntries();
+$auth->requireAdmin();
 
 // Get entry ID from URL
 $entry_id = $_GET['id'] ?? '';
@@ -86,6 +87,12 @@ try {
     
     // Commit transaction
     $conn->commit();
+    
+    // Audit: entry deleted
+    AuditLogger::log('case_entry_delete', 'case_entry', $entry_id, [
+        'case_id' => (int)$case_id,
+        'attachments_deleted' => count($attachments)
+    ]);
     
     // Success - redirect back to case view
     $return_url = $_GET['return_url'] ?? "view_case.php?case_id=" . $case_id;

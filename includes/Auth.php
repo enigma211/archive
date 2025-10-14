@@ -6,6 +6,7 @@
 
 require_once __DIR__ . '/../config.php';
 require_once 'SessionHelper.php';
+require_once 'AuditLogger.php';
 
 class Auth {
     private $conn;
@@ -31,6 +32,11 @@ class Auth {
             
             if (password_verify($password, $row['password_hash'])) {
                 SessionHelper::setUser($row['id'], $row['username'], $row['role']);
+                // Audit: successful login
+                AuditLogger::log('login_success', 'user', $row['id'], [
+                    'username' => $row['username'],
+                    'role' => $row['role']
+                ]);
                 return true;
             }
         }

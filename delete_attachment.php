@@ -6,10 +6,11 @@
 
 require_once 'includes/Auth.php';
 require_once 'config.php';
+require_once 'includes/AuditLogger.php';
 
-// Initialize Auth and check permissions
+// Initialize Auth and check permissions (Admin only)
 $auth = new Auth();
-$auth->requireEditCaseEntries();
+$auth->requireAdmin();
 
 // Get attachment ID from URL
 $attachment_id = $_GET['id'] ?? '';
@@ -68,6 +69,12 @@ try {
     
     // Commit transaction
     $conn->commit();
+    
+    // Audit: attachment deleted
+    AuditLogger::log('attachment_delete', 'attachment', $attachment_id, [
+        'case_id' => (int)$case_id,
+        'file_path' => $file_path
+    ]);
     
     // Success - redirect back to appropriate page
     $return_url = $_GET['return_url'] ?? "view_case.php?case_id=" . $case_id;

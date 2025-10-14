@@ -7,6 +7,7 @@
 require_once 'includes/SessionHelper.php';
 require_once 'includes/JalaliDate.php';
 require_once 'config.php';
+require_once 'includes/AuditLogger.php';
 
 // Start session
 SessionHelper::start();
@@ -69,7 +70,8 @@ if (empty($complaint_date)) {
     }
 }
 
-if (empty($deadline_days) || !is_numeric($deadline_days) || $deadline_days < 1) {
+// Deadline is now optional - validate only if provided
+if (!empty($deadline_days) && (!is_numeric($deadline_days) || $deadline_days < 1)) {
     $errors[] = 'مهلت پاسخ باید یک عدد مثبت باشد';
 }
 
@@ -97,16 +99,23 @@ try {
     $user = SessionHelper::getCurrentUser();
     $user_id = $user['id'];
     
-    // Step 1: Insert new case with deadline
+    // Step 1: Insert new case with deadline (if provided)
     require_once 'includes/DeadlineHelper.php';
-    $deadline_date = DeadlineHelper::calculateDeadlineDate(date('Y-m-d H:i:s'), $deadline_days);
+    
+    // Calculate deadline only if deadline_days is provided and greater than 0
+    $deadline_date = null;
+    $deadline_days_param = null;
+    if (!empty($deadline_days) && $deadline_days > 0) {
+        $deadline_date = DeadlineHelper::calculateDeadlineDate(date('Y-m-d H:i:s'), $deadline_days);
+        $deadline_days_param = (int)$deadline_days;
+    }
     
     $query = "INSERT INTO cases (individual_id, case_title, status, deadline_days, deadline_date, complaint_date) 
               VALUES (:individual_id, :case_title, 'open', :deadline_days, :deadline_date, :complaint_date)";
     $stmt = $conn->prepare($query);
     $stmt->bindParam(':individual_id', $individual_id);
     $stmt->bindParam(':case_title', $case_title);
-    $stmt->bindParam(':deadline_days', $deadline_days);
+    $stmt->bindParam(':deadline_days', $deadline_days_param, PDO::PARAM_INT);
     $stmt->bindParam(':complaint_date', $complaint_date);
     $stmt->bindParam(':deadline_date', $deadline_date);
     
@@ -115,6 +124,14 @@ try {
     }
     
     $case_id = $conn->lastInsertId();
+    // Audit: case created
+    AuditLogger::log('case_create', 'case', $case_id, [
+        'individual_id' => (int)$individual_id,
+        'case_title' => $case_title,
+        'deadline_days' => isset($deadline_days_param)? $deadline_days_param : null,
+        'deadline_date' => $deadline_date,
+        'complaint_date' => $complaint_date
+    ]);
     
     // Step 2: Insert case entry
     $jalali_date = JalaliDate::getCurrentJalaliDate();
@@ -132,6 +149,11 @@ try {
     }
     
     $entry_id = $conn->lastInsertId();
+    // Audit: initial entry created
+    AuditLogger::log('case_entry_create', 'case_entry', $entry_id, [
+        'case_id' => (int)$case_id,
+        'entry_title' => $entry_title
+    ]);
     
     // Step 3: Handle file uploads
     if (isset($_FILES['attachments']) && !empty($_FILES['attachments']['name'][0])) {
@@ -169,6 +191,12 @@ try {
                     if (!$stmt->execute()) {
                         throw new Exception("Failed to insert attachment record");
                     }
+                    // Audit: attachment added
+                    AuditLogger::log('attachment_add', 'attachment', $conn->lastInsertId(), [
+                        'entry_id' => (int)$entry_id,
+                        'original_filename' => $original_filename,
+                        'file_path' => $file_path
+                    ]);
                 } else {
                     throw new Exception("Failed to move uploaded file: " . $original_filename);
                 }

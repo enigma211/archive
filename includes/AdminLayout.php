@@ -6,6 +6,7 @@
 
 require_once 'Auth.php';
 require_once 'JalaliDate.php';
+require_once __DIR__ . '/../functions.php';
 
 class AdminLayout {
     
@@ -404,6 +405,12 @@ class AdminLayout {
                     <a class="nav-link" href="general_settings.php">
                         <i class="fas fa-cog"></i>
                         تنظیمات عمومی
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="audit_logs.php">
+                        <i class="fas fa-clipboard-check"></i>
+                        گزارش رفتار کاربران
                     </a>
                 </li>';
         }

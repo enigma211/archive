@@ -8,6 +8,7 @@ require_once 'includes/SessionHelper.php';
 require_once 'includes/JalaliDate.php';
 require_once 'includes/Auth.php';
 require_once 'config.php';
+require_once 'includes/AuditLogger.php';
 
 // Start session and check auth
 SessionHelper::start();
@@ -35,6 +36,13 @@ try {
         throw new Exception('عدم اتصال به پایگاه داده');
     }
 
+    // Fetch current deadline for auditing
+    $stmt = $conn->prepare("SELECT deadline_date FROM cases WHERE id = :case_id");
+    $stmt->bindValue(':case_id', (int)$case_id, PDO::PARAM_INT);
+    $stmt->execute();
+    $current = $stmt->fetch(PDO::FETCH_ASSOC);
+    $old_deadline = $current ? $current['deadline_date'] : null;
+
     // Convert Jalali to Gregorian if provided; allow clearing when empty
     $deadline_date = null;
     if ($deadline_jalali !== '') {
@@ -57,6 +65,12 @@ try {
     $stmt->bindValue(':case_id', (int)$case_id, PDO::PARAM_INT);
 
     if ($stmt->execute()) {
+        // Audit: deadline update with old/new
+        AuditLogger::log('deadline_update', 'case', $case_id, [
+            'old_deadline_date' => $old_deadline,
+            'new_deadline_date' => $deadline_date,
+            'deadline_jalali_submitted' => $deadline_jalali
+        ]);
         header('Location: view_case.php?case_id=' . urlencode($case_id) . '&success=' . urlencode('مهلت پرونده به‌روزرسانی شد'));
         exit();
     } else {

@@ -8,6 +8,7 @@ require_once 'includes/Auth.php';
 require_once 'config.php';
 require_once 'includes/JalaliDate.php';
 require_once 'includes/DeadlineHelper.php';
+require_once 'includes/AuditLogger.php';
 
 // Initialize Auth and check permissions
 $auth = new Auth();
@@ -40,22 +41,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Validation
     if (empty($case_title)) {
         $error_message = 'عنوان پرونده الزامی است';
-    } elseif (!empty($deadline_days) && (!is_numeric($deadline_days) || $deadline_days < 1)) {
-        $error_message = 'مهلت پاسخ باید یک عدد مثبت باشد';
+    } elseif (!empty($deadline_days) && (!is_numeric($deadline_days) || $deadline_days < 0)) {
+        $error_message = 'مهلت پاسخ باید یک عدد صفر یا مثبت باشد';
     } else {
         try {
             $conn->beginTransaction();
             
-            // Get current case data for deadline calculation
-            $query = "SELECT created_at FROM cases WHERE id = :case_id";
+            // Get current case data for change tracking and deadline calculation
+            $query = "SELECT case_title, case_type, case_stage, deadline_days, deadline_date, created_at FROM cases WHERE id = :case_id";
             $stmt = $conn->prepare($query);
             $stmt->bindParam(':case_id', $case_id);
             $stmt->execute();
             $current_case = $stmt->fetch(PDO::FETCH_ASSOC);
             
-            // Calculate deadline date if deadline_days is provided
+            // Calculate deadline date if deadline_days is provided and greater than 0
             $deadline_date = null;
-            if (!empty($deadline_days) && $current_case) {
+            if (!empty($deadline_days) && $deadline_days > 0 && $current_case) {
                 $deadline_date = DeadlineHelper::calculateDeadlineDate($current_case['created_at'], $deadline_days);
             }
             
@@ -72,14 +73,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->bindParam(':case_type', $case_type_param);
             $stmt->bindParam(':case_stage', $case_stage_param);
             
-            // Handle deadline_days parameter properly
-            $deadline_days_param = !empty($deadline_days) ? (int)$deadline_days : null;
+            // Handle deadline_days parameter properly (allow 0 or null for no deadline)
+            $deadline_days_param = (!empty($deadline_days) || $deadline_days === '0') ? (int)$deadline_days : null;
+            if ($deadline_days_param === 0) {
+                $deadline_days_param = null;
+            }
             $stmt->bindParam(':deadline_days', $deadline_days_param, PDO::PARAM_INT);
             $stmt->bindParam(':deadline_date', $deadline_date);
             $stmt->bindParam(':case_id', $case_id);
             
             if ($stmt->execute()) {
                 $conn->commit();
+                // Audit: log changes
+                $new_values = [
+                    'case_title' => $case_title,
+                    'case_type' => $case_type_param,
+                    'case_stage' => $case_stage_param,
+                    'deadline_days' => $deadline_days_param,
+                    'deadline_date' => $deadline_date
+                ];
+                $old_values = [
+                    'case_title' => $current_case['case_title'] ?? null,
+                    'case_type' => $current_case['case_type'] ?? null,
+                    'case_stage' => $current_case['case_stage'] ?? null,
+                    'deadline_days' => isset($current_case['deadline_days']) ? (int)$current_case['deadline_days'] : null,
+                    'deadline_date' => $current_case['deadline_date'] ?? null
+                ];
+                $changes = [];
+                foreach ($new_values as $k=>$v) {
+                    $ov = $old_values[$k] ?? null;
+                    // normalize empty strings to null for comparison
+                    if ($v === '') $v = null;
+                    if ($ov === '') $ov = null;
+                    if ($ov != $v) {
+                        $changes[$k] = ['old' => $ov, 'new' => $v];
+                    }
+                }
+                AuditLogger::log('case_update', 'case', $case_id, [ 'changes' => $changes ]);
                 header('Location: cases.php?success=' . urlencode('اطلاعات پرونده با موفقیت به‌روزرسانی شد'));
                 exit();
             } else {
@@ -338,8 +368,8 @@ $username = $user['username'];
                                     <label for="deadline_days" class="form-label">مهلت پاسخ (روز)</label>
                                     <input type="number" class="form-control" id="deadline_days" name="deadline_days" 
                                            value="<?php echo htmlspecialchars($case['deadline_days'] ?? ''); ?>" 
-                                           min="1" placeholder="مثال: 90">
-                                    <div class="form-text">تعداد روزهای مهلت برای پاسخ دادن (اختیاری - می‌توانید هر عددی را وارد کنید)</div>
+                                           min="0" placeholder="مثال: 90 (برای بدون مهلت خالی بگذارید)">
+                                    <div class="form-text">تعداد روزهای مهلت برای پاسخ دادن (اختیاری - برای بدون مهلت، خالی بگذارید یا 0 وارد کنید)</div>
                                 </div>
                             </div>
                         </div>

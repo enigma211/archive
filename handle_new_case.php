@@ -349,10 +349,10 @@ if (isset($_GET['error'])) {
                     <div class="row">
                         <div class="col-md-6">
                             <div class="mb-3">
-                                <label for="deadline_days" class="form-label">مهلت پاسخ (روز) *</label>
+                                <label for="deadline_days" class="form-label">مهلت پاسخ (روز)</label>
                                 <input type="number" class="form-control" id="deadline_days" name="deadline_days" 
-                                       min="1" placeholder="مثال: 90" required>
-                                <div class="form-text">تعداد روزهای مهلت برای پاسخ دادن (می‌توانید هر عددی را وارد کنید)</div>
+                                       min="0" placeholder="مثال: 90 (برای بدون مهلت خالی بگذارید یا 0 وارد کنید)">
+                                <div class="form-text">تعداد روزهای مهلت برای پاسخ دادن (اختیاری - برای بدون مهلت، خالی بگذارید یا 0 وارد کنید)</div>
                             </div>
                         </div>
                         <div class="col-md-6">
@@ -361,8 +361,8 @@ if (isset($_GET['error'])) {
                                 <div class="alert alert-info mb-0">
                                     <i class="fas fa-info-circle me-2"></i>
                                     <small>
-                                        مهلت پاسخ از تاریخ ایجاد پرونده محاسبه می‌شود و در صورت عدم پاسخ، 
-                                        وضعیت پرونده به حالت فوری تغییر می‌کند.
+                                        اگر مهلت پاسخ را وارد کنید، از تاریخ ایجاد پرونده محاسبه می‌شود.
+                                        در غیر این صورت، پرونده بدون مهلت ثبت می‌شود.
                                     </small>
                                 </div>
                             </div>
