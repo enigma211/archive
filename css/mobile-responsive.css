@@ -1,0 +1,207 @@
+/* Mobile Responsive Styles for All Pages */
+
+/* Tablet and Mobile (768px and below) */
+@media (max-width: 768px) {
+    /* Header adjustments */
+    .header {
+        padding: 0.8rem 0 !important;
+        margin-bottom: 1rem !important;
+    }
+    .header h2 {
+        font-size: 1.2rem !important;
+    }
+    
+    /* Container adjustments */
+    .container {
+        padding: 0.5rem !important;
+    }
+    .container-fluid {
+        padding: 0.5rem !important;
+    }
+    
+    /* Card adjustments */
+    .card {
+        margin-bottom: 1rem !important;
+    }
+    .card-header {
+        padding: 0.8rem 1rem !important;
+    }
+    .card-body {
+        padding: 1rem !important;
+    }
+    .card-header h4,
+    .card-header h5 {
+        font-size: 0.9rem !important;
+    }
+    
+    /* Table adjustments */
+    .table-responsive {
+        font-size: 0.8rem !important;
+    }
+    .table thead th {
+        padding: 0.4rem 0.5rem !important;
+        font-size: 0.75rem !important;
+    }
+    .table tbody td {
+        padding: 0.4rem 0.5rem !important;
+        font-size: 0.75rem !important;
+    }
+    
+    /* Button adjustments */
+    .btn {
+        padding: 0.3rem 0.6rem !important;
+        font-size: 0.8rem !important;
+    }
+    .btn-sm {
+        padding: 0.2rem 0.4rem !important;
+        font-size: 0.7rem !important;
+    }
+    
+    /* Badge adjustments */
+    .badge {
+        font-size: 0.7rem !important;
+        padding: 0.2rem 0.5rem !important;
+    }
+    
+    /* Form adjustments */
+    .form-control {
+        font-size: 0.8rem !important;
+        padding: 0.5rem !important;
+    }
+    .form-label {
+        font-size: 0.8rem !important;
+    }
+    
+    /* Info items */
+    .info-item {
+        padding: 0.5rem 0 !important;
+    }
+    .info-label {
+        font-size: 0.8rem !important;
+    }
+    .info-value {
+        font-size: 0.8rem !important;
+    }
+    
+    /* Stats cards */
+    .stats-card {
+        margin-bottom: 1rem !important;
+    }
+    .stats-card .card-body {
+        padding: 1rem 0.8rem !important;
+    }
+    .stats-number {
+        font-size: 1.5rem !important;
+    }
+    .stats-label {
+        font-size: 0.8rem !important;
+    }
+    
+    /* Top navbar */
+    .top-navbar {
+        padding: 0.5rem 1rem !important;
+    }
+    .top-navbar h2 {
+        font-size: 1.2rem !important;
+    }
+}
+
+/* Small Mobile (576px and below) */
+@media (max-width: 576px) {
+    /* Header adjustments */
+    .header h2 {
+        font-size: 1rem !important;
+    }
+    .top-navbar h2 {
+        font-size: 1rem !important;
+    }
+    
+    /* Card adjustments */
+    .card-header h4,
+    .card-header h5 {
+        font-size: 0.85rem !important;
+    }
+    
+    /* Table adjustments */
+    .table-responsive {
+        font-size: 0.7rem !important;
+    }
+    .table thead th {
+        font-size: 0.7rem !important;
+        padding: 0.3rem 0.4rem !important;
+    }
+    .table tbody td {
+        font-size: 0.7rem !important;
+        padding: 0.3rem 0.4rem !important;
+    }
+    
+    /* Button adjustments */
+    .btn {
+        padding: 0.25rem 0.5rem !important;
+        font-size: 0.75rem !important;
+    }
+    .btn-sm {
+        padding: 0.15rem 0.3rem !important;
+        font-size: 0.65rem !important;
+    }
+    
+    /* Container adjustments */
+    .container {
+        padding: 0.25rem !important;
+    }
+    .container-fluid {
+        padding: 0.25rem !important;
+    }
+    
+    /* Stats adjustments */
+    .stats-number {
+        font-size: 1.3rem !important;
+    }
+    .stats-label {
+        font-size: 0.75rem !important;
+    }
+    
+    /* Info adjustments */
+    .info-label {
+        font-size: 0.75rem !important;
+    }
+    .info-value {
+        font-size: 0.75rem !important;
+    }
+    
+    /* Form adjustments */
+    .form-control {
+        font-size: 0.75rem !important;
+        padding: 0.4rem !important;
+    }
+    .form-label {
+        font-size: 0.75rem !important;
+    }
+}
+
+/* Extra small devices (480px and below) */
+@media (max-width: 480px) {
+    .header h2 {
+        font-size: 0.9rem !important;
+    }
+    .top-navbar h2 {
+        font-size: 0.9rem !important;
+    }
+    .card-header h4,
+    .card-header h5 {
+        font-size: 0.8rem !important;
+    }
+    .table-responsive {
+        font-size: 0.65rem !important;
+    }
+    .btn {
+        padding: 0.2rem 0.4rem !important;
+        font-size: 0.7rem !important;
+    }
+    .stats-number {
+        font-size: 1.2rem !important;
+    }
+    .stats-label {
+        font-size: 0.7rem !important;
+    }
+}
