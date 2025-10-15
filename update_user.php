@@ -5,6 +5,7 @@
  */
 
 require_once 'header.php';
+require_once 'includes/AuditLogger.php';
 
 // Check if user is admin
 requireAdmin();
@@ -102,6 +103,16 @@ try {
     if (!$stmt->execute()) {
         throw new Exception("خطا در به‌روزرسانی اطلاعات کاربر");
     }
+    
+    // Audit: user updated
+    $changes = ['role' => $role, 'display_name' => $display_name];
+    if (!empty($new_password)) {
+        $changes['password_changed'] = true;
+    }
+    AuditLogger::log('user_update', 'user', $user_id, [
+        'username' => $user['username'],
+        'changes' => $changes
+    ]);
     
     // Commit transaction
     $conn->commit();

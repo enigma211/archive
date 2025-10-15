@@ -6,6 +6,7 @@
 
 require_once 'config.php';
 require_once 'includes/SessionHelper.php';
+require_once 'includes/AuditLogger.php';
 
 // Start session
 SessionHelper::start();
@@ -85,6 +86,12 @@ try {
         SessionHelper::setUser($user['id'], $user['username'], $user['role'], $user['display_name'] ?? null);
         SessionHelper::set('login_time', time());
         SessionHelper::set('last_activity', time());
+        
+        // Audit: successful login
+        AuditLogger::log('login_success', 'user', $user['id'], [
+            'username' => $user['username'],
+            'role' => $user['role']
+        ]);
         
         $conn->commit();
         

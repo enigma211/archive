@@ -9,6 +9,27 @@ $auth->requireAdmin();
 
 $conn = $pdo;
 
+// Ensure audit_logs table exists
+AuditLogger::ensureTable();
+
+// Optional debug mode
+$debug = isset($_GET['debug']) && $_GET['debug'] == '1';
+if ($debug) {
+    ini_set('display_errors', '1');
+    ini_set('display_startup_errors', '1');
+    error_reporting(E_ALL);
+}
+
+// Debug test hook: insert a test log
+if ($debug && isset($_GET['test']) && $_GET['test'] == '1') {
+    try {
+        AuditLogger::log('test_event', 'system', null, ['message' => 'debug test']);
+        echo '<div class="alert alert-info m-3">Test log inserted (action=test_event).</div>';
+    } catch (Exception $e) {
+        echo '<pre style="color:red;white-space:pre-wrap">TEST LOG ERROR: ' . htmlspecialchars($e->getMessage()) . '</pre>';
+    }
+}
+
 // Filters
 $username = $_GET['username'] ?? '';
 $action = $_GET['action'] ?? '';
@@ -40,34 +61,55 @@ if ($date_to !== '') {
 $where_sql = count($where) ? ('WHERE ' . implode(' AND ', $where)) : '';
 
 // Count
-$count_sql = "SELECT COUNT(*) as total FROM audit_logs $where_sql";
-$stmt = $conn->prepare($count_sql);
-foreach ($params as $k=>$v) { $stmt->bindValue($k, $v); }
-$stmt->execute();
-$total = (int)$stmt->fetch()['total'];
-$total_pages = max(1, (int)ceil($total / $per_page));
+try {
+    $count_sql = "SELECT COUNT(*) as total FROM audit_logs $where_sql";
+    $stmt = $conn->prepare($count_sql);
+    foreach ($params as $k=>$v) { $stmt->bindValue($k, $v); }
+    $stmt->execute();
+    $total = (int)$stmt->fetch()['total'];
+    $total_pages = max(1, (int)ceil($total / $per_page));
+} catch (Exception $e) {
+    if ($debug) {
+        echo '<pre style="color:red;white-space:pre-wrap">COUNT ERROR: ' . htmlspecialchars($e->getMessage()) . '</pre>';
+    }
+    $total = 0;
+    $total_pages = 1;
+}
 
-// Fetch
-$sql = "SELECT * FROM audit_logs $where_sql ORDER BY id DESC LIMIT :limit OFFSET :offset";
-$stmt = $conn->prepare($sql);
-foreach ($params as $k=>$v) { $stmt->bindValue($k, $v); }
-$stmt->bindValue(':limit', $per_page, PDO::PARAM_INT);
-$stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
-$stmt->execute();
-$logs = $stmt->fetchAll(PDO::FETCH_ASSOC);
+// Fetch (inline numeric LIMIT/OFFSET to avoid PDO binding issues on some hosts)
+try {
+    $limitSql = (int)$per_page;
+    $offsetSql = (int)$offset;
+    $sql = "SELECT * FROM audit_logs $where_sql ORDER BY id DESC LIMIT $limitSql OFFSET $offsetSql";
+    $stmt = $conn->prepare($sql);
+    foreach ($params as $k=>$v) { $stmt->bindValue($k, $v); }
+    $stmt->execute();
+    $logs = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (Exception $e) {
+    if ($debug) {
+        echo '<pre style="color:red;white-space:pre-wrap">FETCH ERROR: ' . htmlspecialchars($e->getMessage()) . "\nSQL: " . htmlspecialchars($sql) . '</pre>';
+    }
+    $logs = [];
+}
 
 AdminLayout::renderHeader('گزارش رفتار کاربران');
 
 // Localization maps
 $actionMap = [
-    'login_success'    => 'ورود موفق',
-    'case_create'      => 'ایجاد پرونده',
-    'case_update'      => 'ویرایش پرونده',
-    'deadline_update'  => 'بروزرسانی مهلت',
-    'case_entry_create'=> 'افزودن ورودی',
-    'case_entry_delete'=> 'حذف ورودی',
-    'attachment_add'   => 'افزودن پیوست',
-    'attachment_delete'=> 'حذف پیوست',
+    'login_success'     => 'ورود موفق',
+    'case_create'       => 'ایجاد پرونده',
+    'case_update'       => 'ویرایش پرونده',
+    'deadline_update'   => 'بروزرسانی مهلت',
+    'case_entry_create' => 'افزودن ورودی',
+    'case_entry_delete' => 'حذف ورودی',
+    'attachment_add'    => 'افزودن پیوست',
+    'attachment_delete' => 'حذف پیوست',
+    'individual_create' => 'افزودن فرد',
+    'individual_update' => 'ویرایش فرد',
+    'user_create'       => 'ایجاد کاربر',
+    'user_update'       => 'ویرایش کاربر',
+    'user_delete'       => 'حذف کاربر',
+    'test_event'        => 'رویداد تست',
 ];
 
 $entityMap = [
@@ -75,6 +117,8 @@ $entityMap = [
     'case'       => 'پرونده',
     'case_entry' => 'ورودی پرونده',
     'attachment' => 'پیوست',
+    'individual' => 'فرد',
+    'system'     => 'سیستم',
 ];
 
 function faLabel($key) {
@@ -97,6 +141,13 @@ function faLabel($key) {
         'username' => 'نام کاربری',
         'role' => 'نقش',
         'changes' => 'تغییرات',
+        'first_name' => 'نام',
+        'last_name' => 'نام خانوادگی',
+        'national_id' => 'کد ملی',
+        'display_name' => 'نام نمایشی',
+        'password_changed' => 'رمز عبور تغییر کرد',
+        'complaint_date' => 'تاریخ شکایت',
+        'message' => 'پیام',
     ];
     return $map[$key] ?? $key;
 }

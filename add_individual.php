@@ -6,6 +6,7 @@
 
 require_once 'includes/SessionHelper.php';
 require_once 'config.php';
+require_once 'includes/AuditLogger.php';
 
 // Start session
 SessionHelper::start();
@@ -93,6 +94,15 @@ try {
     $stmt->bindParam(':exam_name', $exam_name);
     
     if ($stmt->execute()) {
+        $individual_id = $conn->lastInsertId();
+        
+        // Audit: individual created
+        AuditLogger::log('individual_create', 'individual', $individual_id, [
+            'first_name' => $first_name,
+            'last_name' => $last_name,
+            'national_id' => $national_id
+        ]);
+        
         // Success - redirect with success message
         header('Location: add_individual_page.php?success=' . urlencode('فرد جدید با موفقیت اضافه شد'));
         exit();

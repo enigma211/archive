@@ -5,6 +5,7 @@
  */
 
 require_once 'header.php';
+require_once 'includes/AuditLogger.php';
 
 // Check if user is admin
 requireAdmin();
@@ -92,6 +93,12 @@ try {
     if (!$stmt->execute()) {
         throw new Exception("خطا در حذف کاربر");
     }
+    
+    // Audit: user deleted
+    AuditLogger::log('user_delete', 'user', $user_id, [
+        'username' => $user['username'],
+        'role' => $user['role']
+    ]);
     
     // Commit transaction
     $conn->commit();

@@ -7,6 +7,7 @@
 require_once 'includes/Auth.php';
 require_once 'includes/JalaliDate.php';
 require_once 'config.php';
+require_once 'includes/AuditLogger.php';
 
 // Initialize Auth and check permissions
 $auth = new Auth();
@@ -108,6 +109,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt->bindParam(':id', $individual_id);
                 
                 if ($stmt->execute()) {
+                    // Audit: individual updated
+                    AuditLogger::log('individual_update', 'individual', $individual_id, [
+                        'first_name' => $first_name,
+                        'last_name' => $last_name,
+                        'national_id' => $national_id
+                    ]);
+                    
                     $success_message = 'اطلاعات فرد با موفقیت به‌روزرسانی شد';
                 } else {
                     $error_message = 'خطا در به‌روزرسانی اطلاعات';

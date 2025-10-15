@@ -20,7 +20,7 @@ class AuditLogger {
             action VARCHAR(100) NOT NULL,
             entity_type VARCHAR(100) NULL,
             entity_id VARCHAR(100) NULL,
-            details JSON NULL,
+            details TEXT NULL,
             ip_address VARCHAR(64) NULL,
             user_agent VARCHAR(255) NULL,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -31,6 +31,31 @@ class AuditLogger {
         } catch (Exception $e) {
             // fail silently; logging should never break main flow
             error_log('Audit table init failed: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Ensure audit_logs table exists (public entrypoint)
+     */
+    public static function ensureTable() {
+        try {
+            global $pdo;
+            if (!$pdo) return;
+            self::initTable($pdo);
+
+            // lightweight migration: convert JSON column to TEXT if found
+            try {
+                $stmt = $pdo->query("SHOW COLUMNS FROM audit_logs LIKE 'details'");
+                $col = $stmt->fetch(PDO::FETCH_ASSOC);
+                if ($col && isset($col['Type']) && stripos($col['Type'], 'json') !== false) {
+                    $pdo->exec("ALTER TABLE audit_logs MODIFY details TEXT NULL");
+                }
+            } catch (Exception $e) {
+                // ignore migration failure; not critical
+                error_log('Audit migration check failed: ' . $e->getMessage());
+            }
+        } catch (Exception $e) {
+            error_log('Audit ensureTable failed: ' . $e->getMessage());
         }
     }
 
