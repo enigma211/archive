@@ -145,29 +145,42 @@ class AdminLayout {
         }
         .sidebar-toggle {
             position: fixed;
-            top: 50%;
-            right: 280px;
-            transform: translateY(-50%);
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border: none;
-            color: white;
-            width: 30px;
-            height: 60px;
-            border-radius: 0 8px 8px 0;
+            top: 40px;
+            right: 260px;
+            background: white;
+            border: 2px solid #e0e0e0;
+            color: #2c3e50;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             z-index: 1001;
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: -2px 0 8px rgba(0,0,0,0.2);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            font-size: 18px;
         }
         .sidebar-toggle:hover {
-            background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
-            box-shadow: -4px 0 12px rgba(102, 126, 234, 0.4);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: transparent;
+            box-shadow: 0 4px 16px rgba(102, 126, 234, 0.4);
+            transform: scale(1.05);
+        }
+        .sidebar-toggle:active {
+            transform: scale(0.95);
         }
         .sidebar.hidden + .sidebar-toggle {
-            right: 0;
+            right: 10px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: transparent;
+        }
+        .sidebar.hidden + .sidebar-toggle:hover {
+            box-shadow: 0 4px 20px rgba(102, 126, 234, 0.5);
+            transform: scale(1.1);
         }
         .top-navbar h2 {
             font-size: calc(var(--system-font-size) + 4px);
@@ -438,7 +451,7 @@ class AdminLayout {
     </div>
     
     <button class="sidebar-toggle" onclick="toggleSidebar()" id="sidebarToggle">
-        <i class="fas fa-chevron-right"></i>
+        <i class="fas fa-angle-double-right"></i>
     </button>
     
     <div class="main-content">
@@ -511,9 +524,9 @@ class AdminLayout {
                 
                 // Update button icon for desktop
                 if (sidebar.classList.contains(\'hidden\')) {
-                    toggleBtn.innerHTML = \'<i class="fas fa-chevron-left"></i>\';
+                    toggleBtn.innerHTML = \'<i class="fas fa-bars"></i>\';
                 } else {
-                    toggleBtn.innerHTML = \'<i class="fas fa-chevron-right"></i>\';
+                    toggleBtn.innerHTML = \'<i class="fas fa-angle-double-right"></i>\';
                 }
                 
                 // Save state to localStorage
@@ -533,7 +546,7 @@ class AdminLayout {
                 
                 sidebar.classList.add(\'hidden\');
                 mainContent.classList.add(\'full-width\');
-                toggleBtn.innerHTML = \'<i class="fas fa-chevron-left"></i>\';
+                toggleBtn.innerHTML = \'<i class="fas fa-bars"></i>\';
             } else if (isMobile) {
                 const toggleBtn = document.getElementById(\'sidebarToggle\');
                 toggleBtn.innerHTML = \'<i class="fas fa-bars"></i>\';
@@ -559,9 +572,9 @@ class AdminLayout {
                     const sidebarHidden = localStorage.getItem(\'sidebarHidden\') === \'true\';
                     if (sidebarHidden) {
                         sidebar.classList.add(\'hidden\');
-                        toggleBtn.innerHTML = \'<i class="fas fa-chevron-left"></i>\';
+                        toggleBtn.innerHTML = \'<i class="fas fa-bars"></i>\';
                     } else {
-                        toggleBtn.innerHTML = \'<i class="fas fa-chevron-right"></i>\';
+                        toggleBtn.innerHTML = \'<i class="fas fa-angle-double-right"></i>\';
                     }
                 }
             });
