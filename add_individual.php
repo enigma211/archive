@@ -43,9 +43,7 @@ if (empty($last_name)) {
     $errors[] = 'نام خانوادگی اجباری است';
 }
 
-if (empty($national_id)) {
-    $errors[] = 'کد ملی اجباری است';
-} elseif (!preg_match('/^[0-9]{10}$/', $national_id)) {
+if (!empty($national_id) && !preg_match('/^[0-9]{10}$/', $national_id)) {
     $errors[] = 'کد ملی باید 10 رقم باشد';
 }
 
@@ -69,15 +67,17 @@ try {
         throw new Exception("Database connection failed");
     }
     
-    // Check if national ID already exists
-    $query = "SELECT id FROM individuals WHERE national_id = :national_id";
-    $stmt = $conn->prepare($query);
-    $stmt->bindParam(':national_id', $national_id);
-    $stmt->execute();
-    
-    if ($stmt->rowCount() > 0) {
-        header('Location: add_individual_page.php?error=' . urlencode('کد ملی تکراری است'));
-        exit();
+    // Check if national ID already exists (only if provided)
+    if (!empty($national_id)) {
+        $query = "SELECT id FROM individuals WHERE national_id = :national_id";
+        $stmt = $conn->prepare($query);
+        $stmt->bindParam(':national_id', $national_id);
+        $stmt->execute();
+        
+        if ($stmt->rowCount() > 0) {
+            header('Location: add_individual_page.php?error=' . urlencode('کد ملی تکراری است'));
+            exit();
+        }
     }
     
     // Insert new individual using prepared statement
@@ -87,7 +87,10 @@ try {
     $stmt = $conn->prepare($query);
     $stmt->bindParam(':first_name', $first_name);
     $stmt->bindParam(':last_name', $last_name);
-    $stmt->bindParam(':national_id', $national_id);
+    
+    $national_id_val = empty($national_id) ? null : $national_id;
+    $stmt->bindValue(':national_id', $national_id_val);
+    
     $stmt->bindParam(':mobile_number', $mobile_number);
     $stmt->bindParam(':father_name', $father_name);
     $stmt->bindParam(':university_major', $university_major);

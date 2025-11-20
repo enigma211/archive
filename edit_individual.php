@@ -65,9 +65,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errors[] = 'نام خانوادگی اجباری است';
     }
 
-    if (empty($national_id)) {
-        $errors[] = 'کد ملی اجباری است';
-    } elseif (!preg_match('/^[0-9]{10}$/', $national_id)) {
+    if (!empty($national_id) && !preg_match('/^[0-9]{10}$/', $national_id)) {
         $errors[] = 'کد ملی باید 10 رقم باشد';
     }
 
@@ -77,14 +75,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (empty($errors)) {
         try {
-            // Check if national ID already exists for another individual
-            $query = "SELECT id FROM individuals WHERE national_id = :national_id AND id != :id";
-            $stmt = $conn->prepare($query);
-            $stmt->bindParam(':national_id', $national_id);
-            $stmt->bindParam(':id', $individual_id);
-            $stmt->execute();
+            $is_duplicate = false;
             
-            if ($stmt->rowCount() > 0) {
+            // Check if national ID already exists for another individual (only if provided)
+            if (!empty($national_id)) {
+                $query = "SELECT id FROM individuals WHERE national_id = :national_id AND id != :id";
+                $stmt = $conn->prepare($query);
+                $stmt->bindParam(':national_id', $national_id);
+                $stmt->bindParam(':id', $individual_id);
+                $stmt->execute();
+                
+                if ($stmt->rowCount() > 0) {
+                    $is_duplicate = true;
+                }
+            }
+            
+            if ($is_duplicate) {
                 $error_message = 'کد ملی تکراری است';
             } else {
                 // Update individual information
@@ -101,7 +107,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt = $conn->prepare($query);
                 $stmt->bindParam(':first_name', $first_name);
                 $stmt->bindParam(':last_name', $last_name);
-                $stmt->bindParam(':national_id', $national_id);
+                
+                $national_id_val = empty($national_id) ? null : $national_id;
+                $stmt->bindValue(':national_id', $national_id_val);
+                
                 $stmt->bindParam(':mobile_number', $mobile_number);
                 $stmt->bindParam(':father_name', $father_name);
                 $stmt->bindParam(':university_major', $university_major);
@@ -294,10 +303,10 @@ if ($conn) {
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label for="national_id" class="form-label">کد ملی *</label>
+                                    <label for="national_id" class="form-label">کد ملی</label>
                                     <input type="text" class="form-control" id="national_id" name="national_id" 
                                            value="<?php echo htmlspecialchars($individual['national_id']); ?>" 
-                                           pattern="[0-9]{10}" maxlength="10" required>
+                                           pattern="[0-9]{10}" maxlength="10">
                                 </div>
                             </div>
                             <div class="col-md-6">

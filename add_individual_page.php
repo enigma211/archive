@@ -63,9 +63,9 @@ AdminLayout::renderHeader('افزودن فرد جدید');
                     <div class="row">
                         <div class="col-md-6">
                             <div class="mb-3">
-                                <label for="national_id" class="form-label">کد ملی *</label>
+                                <label for="national_id" class="form-label">کد ملی</label>
                                 <input type="text" class="form-control" id="national_id" name="national_id" 
-                                       pattern="[0-9]{10}" maxlength="10" required>
+                                       pattern="[0-9]{10}" maxlength="10">
                             </div>
                         </div>
                         <div class="col-md-6">

@@ -28,7 +28,7 @@ if ($_POST) {
         $exam_name = trim($_POST['exam_name'] ?? '');
         
         // Validation
-        if (empty($first_name) || empty($last_name) || empty($national_id) || empty($mobile_number)) {
+        if (empty($first_name) || empty($last_name)) {
             $message = 'لطفاً تمام فیلدهای اجباری را پر کنید';
             $message_type = 'error';
         } else {
@@ -46,7 +46,11 @@ if ($_POST) {
                 $stmt = $conn->prepare($query);
                 $stmt->bindParam(':first_name', $first_name);
                 $stmt->bindParam(':last_name', $last_name);
-                $stmt->bindParam(':national_id', $national_id);
+                
+                // Bind null if empty
+                $national_id_val = empty($national_id) ? null : $national_id;
+                $stmt->bindValue(':national_id', $national_id_val);
+                
                 $stmt->bindParam(':mobile_number', $mobile_number);
                 $stmt->bindParam(':father_name', $father_name);
                 $stmt->bindParam(':university_major', $university_major);
@@ -153,9 +157,9 @@ AdminLayout::renderHeader('مدیریت افراد');
                     </div>
                     
                     <div class="mb-3">
-                        <label for="national_id" class="form-label">کد ملی *</label>
+                        <label for="national_id" class="form-label">کد ملی</label>
                         <input type="text" class="form-control" id="national_id" name="national_id" 
-                               value="<?php echo htmlspecialchars($edit_individual['national_id'] ?? ''); ?>" required>
+                               value="<?php echo htmlspecialchars($edit_individual['national_id'] ?? ''); ?>">
                     </div>
                     
                     <div class="mb-3">
