@@ -105,6 +105,21 @@ try {
         // Process each uploaded file
         for ($i = 0; $i < count($_FILES['attachments']['name']); $i++) {
             if ($_FILES['attachments']['error'][$i] === UPLOAD_ERR_OK) {
+                // Construct file array for validation
+                $current_file = [
+                    'name' => $_FILES['attachments']['name'][$i],
+                    'type' => $_FILES['attachments']['type'][$i],
+                    'tmp_name' => $_FILES['attachments']['tmp_name'][$i],
+                    'error' => $_FILES['attachments']['error'][$i],
+                    'size' => $_FILES['attachments']['size'][$i]
+                ];
+
+                // Validate file
+                $validation_errors = AttachmentHelper::validateFile($current_file);
+                if (!empty($validation_errors)) {
+                    throw new Exception("خطا در فایل " . $current_file['name'] . ": " . implode(', ', $validation_errors));
+                }
+
                 $original_filename = $_FILES['attachments']['name'][$i];
                 $file_extension = pathinfo($original_filename, PATHINFO_EXTENSION);
                 
