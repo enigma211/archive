@@ -288,7 +288,7 @@ $username = $user['username'];
                     </h5>
                 </div>
                 <div class="card-body">
-                    <form method="POST" action="handle_new_case.php">
+                    <form method="GET" action="handle_new_case.php">
                         <input type="hidden" name="individual_id" value="<?php echo $individual['id']; ?>">
                         <div class="row">
                             <div class="col-md-6">

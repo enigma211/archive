@@ -18,15 +18,15 @@ if (!SessionHelper::isLoggedIn()) {
 }
 
 // Check if form was submitted
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
     header('Location: dashboard.php?error=invalid_request');
     exit();
 }
 
 // Get form data
-$individual_id = $_POST['individual_id'] ?? '';
-$case_title = trim($_POST['case_title'] ?? '');
-$complaint_date = $_POST['complaint_date'] ?? '';
+$individual_id = $_GET['individual_id'] ?? '';
+$case_title = trim($_GET['case_title'] ?? '');
+$complaint_date = $_GET['complaint_date'] ?? '';
 
 // Server-side validation
 $errors = [];
